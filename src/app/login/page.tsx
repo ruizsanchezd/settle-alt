@@ -68,7 +68,7 @@ function LoginContent() {
 
           {error && (
             <p className="text-center text-sm text-destructive">
-              Error al iniciar sesión: {decodeURIComponent(error)}
+              Error al iniciar sesión. Inténtalo de nuevo.
             </p>
           )}
         </div>
