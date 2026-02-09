@@ -1,0 +1,145 @@
+"use server";
+
+import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
+import type { Group, GroupWithMemberCount } from "@/lib/types";
+
+export async function getMyGroups(): Promise<GroupWithMemberCount[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) throw new Error("No autenticado");
+
+  // Get groups where the user is a member
+  const { data: memberRows } = await supabase
+    .from("members")
+    .select("group_id")
+    .eq("user_id", user.id);
+
+  if (!memberRows || memberRows.length === 0) return [];
+
+  const groupIds = memberRows.map((m) => m.group_id);
+
+  const { data: groups, error } = await supabase
+    .from("groups")
+    .select("*")
+    .in("id", groupIds)
+    .order("created_at", { ascending: false });
+
+  if (error) throw new Error(error.message);
+  if (!groups) return [];
+
+  // Get member counts for each group
+  const { data: counts } = await supabase
+    .from("members")
+    .select("group_id")
+    .in("group_id", groupIds);
+
+  const countMap: Record<string, number> = {};
+  counts?.forEach((m) => {
+    countMap[m.group_id] = (countMap[m.group_id] || 0) + 1;
+  });
+
+  return groups.map((g) => ({
+    ...g,
+    member_count: countMap[g.id] || 0,
+  }));
+}
+
+export async function createGroup(formData: FormData): Promise<{ id: string } | { error: string }> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) return { error: "No autenticado" };
+
+  const name = formData.get("name") as string;
+  const description = (formData.get("description") as string) || null;
+
+  if (!name || name.trim().length === 0) {
+    return { error: "El nombre del grupo es obligatorio" };
+  }
+
+  if (name.trim().length > 100) {
+    return { error: "El nombre no puede superar los 100 caracteres" };
+  }
+
+  // Create group
+  const { data: group, error: groupError } = await supabase
+    .from("groups")
+    .insert({
+      name: name.trim(),
+      description: description?.trim() || null,
+      created_by: user.id,
+    })
+    .select()
+    .single();
+
+  if (groupError) return { error: groupError.message };
+
+  // Get user display name
+  const { data: userData } = await supabase
+    .from("users")
+    .select("display_name")
+    .eq("id", user.id)
+    .single();
+
+  // Add creator as first member
+  const { error: memberError } = await supabase.from("members").insert({
+    group_id: group.id,
+    user_id: user.id,
+    display_name: userData?.display_name || user.email?.split("@")[0] || "Usuario",
+  });
+
+  if (memberError) return { error: memberError.message };
+
+  revalidatePath("/");
+  return { id: group.id };
+}
+
+export async function getGroup(groupId: string): Promise<Group | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("groups")
+    .select("*")
+    .eq("id", groupId)
+    .single();
+
+  if (error) return null;
+  return data;
+}
+
+export async function getGroupByInviteCode(code: string): Promise<Group | null> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("groups")
+    .select("*")
+    .eq("invite_code", code)
+    .single();
+
+  if (error) return null;
+  return data;
+}
+
+export async function archiveGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("groups")
+    .update({
+      status: "archived" as const,
+      archived_at: new Date().toISOString(),
+    })
+    .eq("id", groupId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/");
+  return { success: true };
+}
