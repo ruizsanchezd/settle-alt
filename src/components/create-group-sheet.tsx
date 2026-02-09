@@ -48,7 +48,7 @@ export function CreateGroupSheet() {
           Crear grupo
         </Button>
       </SheetTrigger>
-      <SheetContent side="bottom" className="rounded-t-2xl">
+      <SheetContent side="bottom" className="rounded-t-2xl px-4">
         <SheetHeader>
           <SheetTitle>Nuevo grupo</SheetTitle>
         </SheetHeader>

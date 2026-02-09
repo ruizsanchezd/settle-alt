@@ -15,7 +15,7 @@ export function GroupCard({ group }: { group: GroupWithMemberCount }) {
 
   return (
     <Link href={`/groups/${group.id}`}>
-      <Card className="flex items-center gap-4 rounded-2xl border p-4 transition-colors active:bg-neutral-50">
+      <Card className="flex items-center gap-4 rounded-2xl border p-4 transition-colors hover:bg-muted/50 active:bg-neutral-50">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-base font-semibold">{group.name}</h3>

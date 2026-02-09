@@ -177,7 +177,7 @@ function ExpenseCard({
   return (
     <button
       onClick={onClick}
-      className="flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors active:bg-muted/50"
+      className="flex w-full items-center gap-3 rounded-xl border p-3 text-left transition-colors hover:bg-muted/50 active:bg-muted/50"
     >
       <Avatar className="h-10 w-10 shrink-0">
         <AvatarFallback className={`text-xs font-medium ${colors}`}>

@@ -107,7 +107,7 @@ export function GroupSettingsTab({
             return (
               <div
                 key={member.id}
-                className="flex items-center gap-3 rounded-xl border p-3"
+                className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/50"
               >
                 <Avatar className="h-9 w-9">
                   <AvatarFallback className={`text-xs font-medium ${colors}`}>

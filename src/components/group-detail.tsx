@@ -56,7 +56,7 @@ export function GroupDetail({
 
       {/* Tabs */}
       <Tabs defaultValue="expenses" className="w-full">
-        <TabsList className="sticky top-14 z-40 grid h-11 w-full grid-cols-3 rounded-none border-b bg-background">
+        <TabsList className="sticky top-14 z-40 grid h-11 w-full grid-cols-3 rounded-none bg-background px-4">
           <TabsTrigger value="expenses" className="text-sm">
             Gastos
           </TabsTrigger>

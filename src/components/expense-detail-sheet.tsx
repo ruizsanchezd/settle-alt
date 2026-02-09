@@ -86,7 +86,7 @@ export function ExpenseDetailSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl"
+          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl px-4"
         >
           <SheetHeader>
             <SheetTitle className="text-left">

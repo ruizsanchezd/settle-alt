@@ -168,7 +168,7 @@ export function GroupBalancesTab({
               return (
                 <div
                   key={b.memberId}
-                  className="flex items-center gap-3 rounded-xl border p-3"
+                  className="flex items-center gap-3 rounded-xl border p-3 transition-colors hover:bg-muted/50"
                 >
                   <Avatar className="h-9 w-9">
                     <AvatarFallback
@@ -342,7 +342,7 @@ function TransferCard({
   const toColors = getAvatarColor(transfer.toName);
 
   return (
-    <div className="flex items-center gap-2 rounded-xl border p-3">
+    <div className="flex items-center gap-2 rounded-xl border p-3 transition-colors hover:bg-muted/50">
       {/* From */}
       <div className="flex items-center gap-2">
         <Avatar className="h-8 w-8">

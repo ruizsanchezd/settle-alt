@@ -90,7 +90,7 @@ export function ExpenseFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[90dvh] overflow-y-auto rounded-t-2xl"
+        className="max-h-[90dvh] overflow-y-auto rounded-t-2xl px-4"
       >
         {open && (
           <ExpenseFormContent
