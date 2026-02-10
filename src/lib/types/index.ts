@@ -13,6 +13,7 @@ export interface Group {
   id: string;
   name: string;
   description: string | null;
+  emoji: string | null;
   status: GroupStatus;
   created_by: string;
   invite_code: string;

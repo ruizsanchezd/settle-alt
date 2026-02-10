@@ -86,7 +86,7 @@ export function ExpenseDetailSheet({
       <Sheet open={open} onOpenChange={onOpenChange}>
         <SheetContent
           side="bottom"
-          className="max-h-[85dvh] overflow-y-auto rounded-t-2xl px-4"
+          className="rounded-t-2xl px-4"
         >
           <SheetHeader>
             <SheetTitle className="text-left">
@@ -94,7 +94,7 @@ export function ExpenseDetailSheet({
             </SheetTitle>
           </SheetHeader>
 
-          <div className="mt-5 space-y-5 pb-4">
+          <div className="mt-4 space-y-5 pb-6">
             {/* Amount */}
             <div className="text-center">
               <p className="text-3xl font-bold">

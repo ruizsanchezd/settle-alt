@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Users, ChevronRight } from "lucide-react";
+import { Users, Layers } from "lucide-react";
 import type { GroupWithMemberCount } from "@/lib/types";
 
 const STATUS_CONFIG = {
@@ -16,6 +16,9 @@ export function GroupCard({ group }: { group: GroupWithMemberCount }) {
   return (
     <Link href={`/groups/${group.id}`}>
       <Card className="flex items-center gap-4 rounded-2xl border p-4 transition-colors hover:bg-muted/50 active:bg-neutral-50">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-xl">
+          {group.emoji || <Layers className="h-5 w-5 text-muted-foreground" />}
+        </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
             <h3 className="truncate text-base font-semibold">{group.name}</h3>
@@ -39,7 +42,6 @@ export function GroupCard({ group }: { group: GroupWithMemberCount }) {
             </span>
           </div>
         </div>
-        <ChevronRight className="h-5 w-5 shrink-0 text-muted-foreground" />
       </Card>
     </Link>
   );

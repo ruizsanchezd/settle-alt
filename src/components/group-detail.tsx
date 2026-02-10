@@ -30,25 +30,24 @@ export function GroupDetail({
   return (
     <div className="mx-auto max-w-lg">
       {/* Header */}
-      <div className="border-b px-4 pb-4 pt-2">
-        <button
-          onClick={() => router.push("/")}
-          className="mb-3 flex items-center gap-1 text-sm text-muted-foreground"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Grupos
-        </button>
-        <div className="flex items-center gap-2">
-          <h1 className="text-xl font-bold">{group.name}</h1>
+      <div className="px-4 pb-4 pt-2">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/")}
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted active:bg-muted"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="truncate text-xl font-bold">{group.name}</h1>
           <Badge
             variant="outline"
-            className={`text-[11px] font-medium ${status.className}`}
+            className={`shrink-0 text-[11px] font-medium ${status.className}`}
           >
             {status.label}
           </Badge>
         </div>
         {group.description && (
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 pl-[52px] text-sm text-muted-foreground">
             {group.description}
           </p>
         )}
@@ -68,7 +67,7 @@ export function GroupDetail({
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="expenses" className="mt-0 px-4 py-4">
+        <TabsContent value="expenses" className="mt-0 px-4 pb-12 pt-4">
           <GroupExpensesTab
             group={group}
             members={members}
@@ -76,11 +75,11 @@ export function GroupDetail({
           />
         </TabsContent>
 
-        <TabsContent value="balances" className="mt-0 px-4 py-4">
+        <TabsContent value="balances" className="mt-0 px-4 pb-12 pt-4">
           <GroupBalancesTab group={group} members={members} />
         </TabsContent>
 
-        <TabsContent value="settings" className="mt-0 px-4 py-4">
+        <TabsContent value="settings" className="mt-0 px-4 pb-12 pt-4">
           <GroupSettingsTab group={group} members={members} />
         </TabsContent>
       </Tabs>

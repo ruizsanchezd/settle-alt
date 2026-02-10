@@ -13,12 +13,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
+import { EmojiPicker } from "@/components/emoji-picker";
 import { createGroup } from "@/lib/actions/groups";
 
 export function CreateGroupSheet() {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [emoji, setEmoji] = useState<string | null>(null);
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -27,6 +29,7 @@ export function CreateGroupSheet() {
     setError(null);
 
     const formData = new FormData(e.currentTarget);
+    if (emoji) formData.set("emoji", emoji);
     const result = await createGroup(formData);
 
     if ("error" in result) {
@@ -52,7 +55,11 @@ export function CreateGroupSheet() {
         <SheetHeader>
           <SheetTitle>Nuevo grupo</SheetTitle>
         </SheetHeader>
-        <form onSubmit={handleSubmit} className="mt-6 space-y-5">
+        <form onSubmit={handleSubmit} className="mt-4 space-y-5 pb-6">
+          <div className="space-y-2">
+            <Label>Emoji</Label>
+            <EmojiPicker value={emoji} onChange={setEmoji} />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="name">Nombre del grupo</Label>
             <Input

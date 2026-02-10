@@ -90,7 +90,7 @@ export function ExpenseFormSheet({
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="bottom"
-        className="max-h-[90dvh] overflow-y-auto rounded-t-2xl px-4"
+        className="rounded-t-2xl px-4"
       >
         {open && (
           <ExpenseFormContent
@@ -279,7 +279,7 @@ function ExpenseFormContent({
         </SheetTitle>
       </SheetHeader>
 
-      <div className="mt-6 space-y-5 pb-4">
+      <div className="mt-4 space-y-5 pb-6">
         {/* Settling warning */}
         {group.status === "settling" && (
           <div className="flex items-start gap-2 rounded-xl border border-yellow-200 bg-yellow-50 p-3">

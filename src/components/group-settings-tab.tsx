@@ -26,7 +26,8 @@ import {
   CircleCheck,
 } from "lucide-react";
 import { addPlaceholderMember } from "@/lib/actions/members";
-import { archiveGroup } from "@/lib/actions/groups";
+import { archiveGroup, updateGroupEmoji } from "@/lib/actions/groups";
+import { EmojiPicker } from "@/components/emoji-picker";
 import { getGroupSettlements } from "@/lib/actions/settlements";
 import { getInitials, getAvatarColor, formatCurrency, formatDate } from "@/lib/utils/format";
 import { toast } from "sonner";
@@ -48,7 +49,18 @@ export function GroupSettingsTab({
   const [archiving, setArchiving] = useState(false);
   const [settlements, setSettlements] = useState<Settlement[]>([]);
 
+  const [groupEmoji, setGroupEmoji] = useState<string | null>(group.emoji);
+
   const isArchived = group.status === "archived";
+
+  const handleEmojiChange = async (emoji: string | null) => {
+    setGroupEmoji(emoji);
+    const result = await updateGroupEmoji(group.id, emoji);
+    if (result.error) {
+      toast.error(result.error);
+      setGroupEmoji(group.emoji);
+    }
+  };
 
   useEffect(() => {
     getGroupSettlements(group.id).then(setSettlements).catch(() => {});
@@ -96,6 +108,16 @@ export function GroupSettingsTab({
 
   return (
     <div className="space-y-6">
+      {/* Emoji section */}
+      {!isArchived && (
+        <div>
+          <h3 className="mb-3 text-sm font-semibold">Emoji del grupo</h3>
+          <EmojiPicker value={groupEmoji} onChange={handleEmojiChange} />
+        </div>
+      )}
+
+      <Separator />
+
       {/* Members section */}
       <div>
         <h3 className="mb-3 text-sm font-semibold">

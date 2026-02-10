@@ -58,6 +58,7 @@ export async function createGroup(formData: FormData): Promise<{ id: string } | 
 
   const name = formData.get("name") as string;
   const description = (formData.get("description") as string) || null;
+  const emoji = (formData.get("emoji") as string) || null;
 
   if (!name || name.trim().length === 0) {
     return { error: "El nombre del grupo es obligatorio" };
@@ -73,6 +74,7 @@ export async function createGroup(formData: FormData): Promise<{ id: string } | 
     .insert({
       name: name.trim(),
       description: description?.trim() || null,
+      emoji: emoji || null,
       created_by: user.id,
     })
     .select()
@@ -124,6 +126,24 @@ export async function getGroupByInviteCode(code: string): Promise<Group | null> 
 
   if (error) return null;
   return data;
+}
+
+export async function updateGroupEmoji(
+  groupId: string,
+  emoji: string | null
+): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("groups")
+    .update({ emoji })
+    .eq("id", groupId);
+
+  if (error) return { success: false, error: error.message };
+
+  revalidatePath(`/groups/${groupId}`);
+  revalidatePath("/");
+  return { success: true };
 }
 
 export async function archiveGroup(groupId: string): Promise<{ success: boolean; error?: string }> {
