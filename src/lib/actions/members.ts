@@ -12,7 +12,16 @@ export async function getPlaceholdersByInviteCode(
   const { data, error } = await supabase
     .rpc("get_group_placeholders", { code });
 
-  if (error || !data) return [];
+  if (error || !data) {
+    if (error) {
+      console.error("[getPlaceholdersByInviteCode]", {
+        inviteCode: code,
+        error: error.message,
+        code: error.code,
+      });
+    }
+    return [];
+  }
   return data;
 }
 
@@ -25,7 +34,14 @@ export async function getGroupMembers(groupId: string): Promise<Member[]> {
     .eq("group_id", groupId)
     .order("created_at", { ascending: true });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("[getGroupMembers]", {
+      groupId,
+      error: error.message,
+      code: error.code,
+    });
+    return [];
+  }
   return data || [];
 }
 
@@ -59,7 +75,15 @@ export async function addPlaceholderMember(
     .select()
     .single();
 
-  if (error) return { error: error.message };
+  if (error) {
+    console.error("[addPlaceholderMember]", {
+      groupId,
+      userId: user.id,
+      error: error.message,
+      code: error.code,
+    });
+    return { error: "Error al añadir miembro" };
+  }
 
   revalidatePath(`/groups/${groupId}`);
   return { member: data };
@@ -81,6 +105,14 @@ export async function joinGroup(
     .rpc("get_group_preview_by_invite", { code: inviteCode });
 
   if (rpcError || !groups || groups.length === 0) {
+    if (rpcError) {
+      console.error("[joinGroup]", {
+        inviteCode,
+        userId: user.id,
+        error: rpcError.message,
+        code: rpcError.code,
+      });
+    }
     return { error: "Grupo no encontrado" };
   }
 

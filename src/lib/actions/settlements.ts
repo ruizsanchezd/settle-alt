@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Member, Settlement } from "@/lib/types";
+import { calculateOptimizedTransfers as calculateTransfers } from "@/lib/utils/transfers";
 
 // ─── Types ───────────────────────────────────────────────
 
@@ -127,62 +128,28 @@ export async function getGroupBalances(
   };
 }
 
-// ─── Greedy transfer optimization ────────────────────────
+// ─── Wrapper for transfer calculation with member names ──
 
 function calculateOptimizedTransfers(
   balanceMap: Map<string, number>,
   memberMap: Map<string, Member>
 ): SuggestedTransfer[] {
-  // Separate into debtors (negative balance = they owe) and creditors (positive = they are owed)
-  const debtors: { id: string; amount: number }[] = [];
-  const creditors: { id: string; amount: number }[] = [];
-
+  // Convert Map to Record for the utility function
+  const balances: Record<string, number> = {};
   balanceMap.forEach((balance, memberId) => {
-    if (balance < -0.005) {
-      debtors.push({ id: memberId, amount: Math.abs(balance) });
-    } else if (balance > 0.005) {
-      creditors.push({ id: memberId, amount: balance });
-    }
+    balances[memberId] = balance;
   });
 
-  // Sort: largest first
-  debtors.sort((a, b) => b.amount - a.amount);
-  creditors.sort((a, b) => b.amount - a.amount);
+  const transfers = calculateTransfers(balances);
 
-  const transfers: SuggestedTransfer[] = [];
-
-  let i = 0;
-  let j = 0;
-
-  while (i < debtors.length && j < creditors.length) {
-    const debtor = debtors[i];
-    const creditor = creditors[j];
-
-    const transferAmount =
-      Math.round(Math.min(debtor.amount, creditor.amount) * 100) / 100;
-
-    if (transferAmount > 0.005) {
-      const fromMember = memberMap.get(debtor.id);
-      const toMember = memberMap.get(creditor.id);
-
-      transfers.push({
-        fromMemberId: debtor.id,
-        fromName: fromMember?.display_name || "Desconocido",
-        toMemberId: creditor.id,
-        toName: toMember?.display_name || "Desconocido",
-        amount: transferAmount,
-      });
-    }
-
-    debtor.amount = Math.round((debtor.amount - transferAmount) * 100) / 100;
-    creditor.amount =
-      Math.round((creditor.amount - transferAmount) * 100) / 100;
-
-    if (debtor.amount < 0.005) i++;
-    if (creditor.amount < 0.005) j++;
-  }
-
-  return transfers;
+  // Add member names to transfers
+  return transfers.map((t) => ({
+    fromMemberId: t.from,
+    fromName: memberMap.get(t.from)?.display_name || "Desconocido",
+    toMemberId: t.to,
+    toName: memberMap.get(t.to)?.display_name || "Desconocido",
+    amount: t.amount,
+  }));
 }
 
 // ─── Settlement actions ──────────────────────────────────
@@ -217,13 +184,23 @@ export async function markTransferAsSettled(
   }
 
   // Check group status — transition to settling if active
-  const { data: group } = await supabase
+  const { data: group, error: groupError } = await supabase
     .from("groups")
     .select("status")
     .eq("id", groupId)
     .single();
 
-  if (!group) return { success: false, error: "Grupo no encontrado" };
+  if (groupError || !group) {
+    if (groupError) {
+      console.error("[markTransferAsSettled]", {
+        groupId,
+        userId: user.id,
+        error: groupError.message,
+        code: groupError.code,
+      });
+    }
+    return { success: false, error: "Grupo no encontrado" };
+  }
   if (group.status === "archived") {
     return { success: false, error: "El grupo está archivado" };
   }
@@ -238,7 +215,15 @@ export async function markTransferAsSettled(
       })
       .eq("id", groupId);
 
-    if (updateError) return { success: false, error: updateError.message };
+    if (updateError) {
+      console.error("[markTransferAsSettled] group update", {
+        groupId,
+        userId: user.id,
+        error: updateError.message,
+        code: updateError.code,
+      });
+      return { success: false, error: "Error al actualizar el estado del grupo" };
+    }
   }
 
   // Create the settlement record
@@ -250,7 +235,18 @@ export async function markTransferAsSettled(
     settled_at: new Date().toISOString(),
   });
 
-  if (error) return { success: false, error: error.message };
+  if (error) {
+    console.error("[markTransferAsSettled] settlement insert", {
+      groupId,
+      userId: user.id,
+      fromMemberId,
+      toMemberId,
+      amount,
+      error: error.message,
+      code: error.code,
+    });
+    return { success: false, error: "Error al registrar el pago" };
+  }
 
   revalidatePath(`/groups/${groupId}`);
   return { success: true };
@@ -267,6 +263,13 @@ export async function getGroupSettlements(
     .eq("group_id", groupId)
     .order("created_at", { ascending: false });
 
-  if (error) return [];
+  if (error) {
+    console.error("[getGroupSettlements]", {
+      groupId,
+      error: error.message,
+      code: error.code,
+    });
+    return [];
+  }
   return data || [];
 }

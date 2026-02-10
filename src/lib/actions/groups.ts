@@ -15,7 +15,16 @@ export async function getMyGroups(): Promise<GroupWithMemberCount[]> {
   // Use RPC for optimized single-query fetch with member counts
   const { data, error } = await supabase.rpc("get_my_groups");
 
-  if (error || !data) return [];
+  if (error || !data) {
+    if (error) {
+      console.error("[getMyGroups]", {
+        userId: user.id,
+        error: error.message,
+        code: error.code,
+      });
+    }
+    return [];
+  }
 
   return data.map((g: any) => ({
     ...g,
@@ -69,7 +78,15 @@ export async function createGroup(formData: FormData): Promise<{ id: string } | 
     }
   );
 
-  if (rpcError) return { error: rpcError.message };
+  if (rpcError) {
+    console.error("[createGroup]", {
+      userId: user.id,
+      error: rpcError.message,
+      code: rpcError.code,
+      details: rpcError.details,
+    });
+    return { error: "Error al crear el grupo" };
+  }
 
   revalidatePath("/");
   return { id: groupId };
@@ -84,7 +101,14 @@ export async function getGroup(groupId: string): Promise<Group | null> {
     .eq("id", groupId)
     .single();
 
-  if (error) return null;
+  if (error) {
+    console.error("[getGroup]", {
+      groupId,
+      error: error.message,
+      code: error.code,
+    });
+    return null;
+  }
   return data;
 }
 
@@ -94,7 +118,16 @@ export async function getGroupByInviteCode(code: string): Promise<GroupPreview |
   const { data, error } = await supabase
     .rpc("get_group_preview_by_invite", { code });
 
-  if (error || !data || data.length === 0) return null;
+  if (error || !data || data.length === 0) {
+    if (error) {
+      console.error("[getGroupByInviteCode]", {
+        inviteCode: code,
+        error: error.message,
+        code: error.code,
+      });
+    }
+    return null;
+  }
   return data[0];
 }
 
