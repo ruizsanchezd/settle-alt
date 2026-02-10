@@ -9,16 +9,16 @@ import { Users, UserPlus, Check } from "lucide-react";
 import { joinGroup } from "@/lib/actions/members";
 import { getInitials, getAvatarColor } from "@/lib/utils/format";
 import { toast } from "sonner";
-import type { Group, Member } from "@/lib/types";
+import type { GroupPreview } from "@/lib/types";
 
 export function JoinGroupFlow({
   group,
   inviteCode,
   placeholders,
 }: {
-  group: Group;
+  group: GroupPreview;
   inviteCode: string;
-  placeholders: Member[];
+  placeholders: { id: string; display_name: string }[];
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | null>(null);

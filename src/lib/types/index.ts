@@ -61,6 +61,15 @@ export interface Settlement {
   created_at: string;
 }
 
+// Partial type returned by the get_group_preview_by_invite RPC
+export interface GroupPreview {
+  id: string;
+  name: string;
+  description: string | null;
+  emoji: string | null;
+  status: GroupStatus;
+}
+
 // Extended types with joins
 export interface GroupWithMemberCount extends Group {
   member_count: number;

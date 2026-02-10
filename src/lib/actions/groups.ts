@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import type { Group, GroupWithMemberCount } from "@/lib/types";
+import type { Group, GroupPreview, GroupWithMemberCount } from "@/lib/types";
 
 export async function getMyGroups(): Promise<GroupWithMemberCount[]> {
   const supabase = await createClient();
@@ -115,17 +115,14 @@ export async function getGroup(groupId: string): Promise<Group | null> {
   return data;
 }
 
-export async function getGroupByInviteCode(code: string): Promise<Group | null> {
+export async function getGroupByInviteCode(code: string): Promise<GroupPreview | null> {
   const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("invite_code", code)
-    .single();
+    .rpc("get_group_preview_by_invite", { code });
 
-  if (error) return null;
-  return data;
+  if (error || !data || data.length === 0) return null;
+  return data[0];
 }
 
 export async function updateGroupEmoji(

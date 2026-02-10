@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { getGroupByInviteCode } from "@/lib/actions/groups";
-import { getGroupMembers } from "@/lib/actions/members";
+import { getPlaceholdersByInviteCode, getCurrentMember } from "@/lib/actions/members";
 import { JoinGroupFlow } from "@/components/join-group-flow";
 
 export default async function JoinPage({
@@ -48,16 +48,15 @@ export default async function JoinPage({
     );
   }
 
-  // Check if user is already a member
-  const members = await getGroupMembers(group.id);
-  const existingMember = members.find((m) => m.user_id === user.id);
+  // Check if user is already a member (uses regular RLS — works for existing members)
+  const existingMember = await getCurrentMember(group.id);
 
   if (existingMember) {
     redirect(`/groups/${group.id}`);
   }
 
-  // Show unlinked placeholders (no user_id)
-  const placeholders = members.filter((m) => !m.user_id);
+  // Get unlinked placeholders via RPC (works for non-members)
+  const placeholders = await getPlaceholdersByInviteCode(code);
 
   return (
     <JoinGroupFlow

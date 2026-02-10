@@ -4,6 +4,18 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Member } from "@/lib/types";
 
+export async function getPlaceholdersByInviteCode(
+  code: string
+): Promise<{ id: string; display_name: string }[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .rpc("get_group_placeholders", { code });
+
+  if (error || !data) return [];
+  return data;
+}
+
 export async function getGroupMembers(groupId: string): Promise<Member[]> {
   const supabase = await createClient();
 
@@ -63,21 +75,25 @@ export async function joinGroup(
 
   if (!user) return { error: "No autenticado" };
 
-  // Find group by invite code
-  const { data: group } = await supabase
-    .from("groups")
-    .select("*")
-    .eq("invite_code", inviteCode)
-    .single();
+  // Find group by invite code via RPC (works for non-members)
+  const { data: groups, error: rpcError } = await supabase
+    .rpc("get_group_preview_by_invite", { code: inviteCode });
 
-  if (!group) return { error: "Grupo no encontrado" };
+  if (rpcError || !groups || groups.length === 0) {
+    return { error: "Grupo no encontrado" };
+  }
+
+  const group = groups[0];
 
   if (group.status === "archived") {
     return { error: "Este grupo está archivado" };
   }
 
+  // Use admin client for member queries (user may not be a member yet)
+  const adminSupabase = createAdminClient();
+
   // Check if user is already a member
-  const { data: existingMember } = await supabase
+  const { data: existingMember } = await adminSupabase
     .from("members")
     .select("id")
     .eq("group_id", group.id)
@@ -99,10 +115,10 @@ export async function joinGroup(
     userData?.display_name || user.email?.split("@")[0] || "Usuario";
 
   if (memberId) {
-    // Link to existing placeholder member
-    const { data: placeholder } = await supabase
+    // Validate placeholder exists and belongs to this group
+    const { data: placeholder } = await adminSupabase
       .from("members")
-      .select("*")
+      .select("id")
       .eq("id", memberId)
       .eq("group_id", group.id)
       .is("user_id", null)
@@ -112,20 +128,21 @@ export async function joinGroup(
       return { error: "Miembro no encontrado o ya vinculado" };
     }
 
-    // Use admin client to bypass RLS for this specific operation
-    // This is safe because we've already validated:
-    // 1. User is authenticated
-    // 2. Placeholder exists and belongs to the correct group
-    // 3. Placeholder is not already linked (user_id IS NULL)
-    const adminSupabase = createAdminClient();
-
-    const { error: updateError } = await adminSupabase
+    // Atomically link placeholder — only updates if user_id is still NULL
+    // This prevents race conditions where two users try to claim the same placeholder
+    const { data: updated, error: updateError } = await adminSupabase
       .from("members")
       .update({ user_id: user.id })
-      .eq("id", memberId);
+      .eq("id", memberId)
+      .is("user_id", null)
+      .select();
 
     if (updateError) {
       return { error: `Error al vincular: ${updateError.message}` };
+    }
+
+    if (!updated || updated.length === 0) {
+      return { error: "Este miembro ya fue vinculado por otra persona. Vuelve a intentarlo seleccionando otro." };
     }
   } else {
     // Create new member
