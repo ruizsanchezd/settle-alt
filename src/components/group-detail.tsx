@@ -10,12 +10,7 @@ import type { BalancesData } from "@/lib/actions/settlements";
 import { GroupExpensesTab } from "@/components/group-expenses-tab";
 import { GroupBalancesTab } from "@/components/group-balances-tab";
 import { GroupSettingsTab } from "@/components/group-settings-tab";
-
-const STATUS_CONFIG = {
-  active: { label: "Activo", className: "bg-green-50 text-green-700 border-green-200" },
-  settling: { label: "Liquidando", className: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  archived: { label: "Archivado", className: "bg-neutral-100 text-neutral-500 border-neutral-200" },
-} as const;
+import { STATUS_CONFIG } from "@/lib/constants";
 
 export function GroupDetail({
   group,

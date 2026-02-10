@@ -30,13 +30,7 @@ import {
 } from "@/lib/actions/expenses";
 import { toast } from "sonner";
 import type { Group, Member, SplitType } from "@/lib/types";
-
-const SPLIT_TYPE_LABELS: Record<SplitType, string> = {
-  equal: "A partes iguales",
-  exact: "Cantidades exactas",
-  percentage: "Por porcentaje",
-  shares: "Por partes",
-};
+import { SPLIT_TYPE_LABELS } from "@/lib/constants";
 
 interface ExpenseFormSheetProps {
   open: boolean;

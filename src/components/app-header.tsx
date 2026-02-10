@@ -11,16 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LogOut } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
-
-function getInitials(name: string | undefined | null): string {
-  if (!name) return "?";
-  return name
-    .split(" ")
-    .map((n) => n[0])
-    .join("")
-    .toUpperCase()
-    .slice(0, 2);
-}
+import { getInitials } from "@/lib/utils/format";
 
 export function AppHeader({ user }: { user: User }) {
   const router = useRouter();

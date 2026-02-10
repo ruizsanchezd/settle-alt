@@ -3,12 +3,7 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Users, Layers } from "lucide-react";
 import type { GroupWithMemberCount } from "@/lib/types";
-
-const STATUS_CONFIG = {
-  active: { label: "Activo", className: "bg-green-50 text-green-700 border-green-200" },
-  settling: { label: "Liquidando", className: "bg-yellow-50 text-yellow-700 border-yellow-200" },
-  archived: { label: "Archivado", className: "bg-neutral-100 text-neutral-500 border-neutral-200" },
-} as const;
+import { STATUS_CONFIG } from "@/lib/constants";
 
 export function GroupCard({ group }: { group: GroupWithMemberCount }) {
   const status = STATUS_CONFIG[group.status];

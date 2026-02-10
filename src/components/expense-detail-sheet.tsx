@@ -29,13 +29,7 @@ import {
 } from "@/lib/utils/format";
 import { toast } from "sonner";
 import type { Member, SplitType } from "@/lib/types";
-
-const SPLIT_TYPE_LABELS: Record<SplitType, string> = {
-  equal: "A partes iguales",
-  exact: "Cantidades exactas",
-  percentage: "Por porcentaje",
-  shares: "Por partes",
-};
+import { SPLIT_TYPE_LABELS } from "@/lib/constants";
 
 interface ExpenseDetailSheetProps {
   expense: ExpenseWithSplits | null;

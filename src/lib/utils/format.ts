@@ -32,7 +32,8 @@ export function formatDate(dateStr: string): string {
 /**
  * Get initials from a name (max 2 chars)
  */
-export function getInitials(name: string): string {
+export function getInitials(name: string | null | undefined): string {
+  if (!name) return "?";
   return name
     .split(" ")
     .map((n) => n[0])

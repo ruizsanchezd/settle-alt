@@ -74,7 +74,3 @@ export interface GroupPreview {
 export interface GroupWithMemberCount extends Group {
   member_count: number;
 }
-
-export interface MemberWithUser extends Member {
-  user: User | null;
-}
