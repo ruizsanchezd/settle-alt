@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import type { Member } from "@/lib/types";
 
@@ -129,7 +129,6 @@ export async function joinGroup(
     // 1. User is authenticated
     // 2. Placeholder exists and belongs to the correct group
     // 3. Placeholder is not already linked (user_id IS NULL)
-    const { createAdminClient } = await import("@/lib/supabase/server");
     const adminSupabase = await createAdminClient();
 
     const { error: updateError } = await adminSupabase
