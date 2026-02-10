@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -22,7 +22,6 @@ import {
   History,
 } from "lucide-react";
 import {
-  getGroupBalances,
   markTransferAsSettled,
   type BalancesData,
   type SuggestedTransfer,
@@ -39,13 +38,14 @@ import type { Group, Member } from "@/lib/types";
 export function GroupBalancesTab({
   group,
   members,
+  initialBalances,
 }: {
   group: Group;
   members: Member[];
+  initialBalances: BalancesData | null;
 }) {
   const router = useRouter();
-  const [data, setData] = useState<BalancesData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [data] = useState<BalancesData | null>(initialBalances);
   const [settlingTransfer, setSettlingTransfer] =
     useState<SuggestedTransfer | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -53,21 +53,6 @@ export function GroupBalancesTab({
 
   const isArchived = group.status === "archived";
   const isSettling = group.status === "settling";
-
-  const loadData = useCallback(async () => {
-    try {
-      const result = await getGroupBalances(group.id, members);
-      setData(result);
-    } catch {
-      toast.error("Error al cargar los balances");
-    } finally {
-      setLoading(false);
-    }
-  }, [group.id, members]);
-
-  useEffect(() => {
-    loadData();
-  }, [loadData]);
 
   const handleSettle = async () => {
     if (!settlingTransfer) return;
@@ -85,20 +70,12 @@ export function GroupBalancesTab({
     } else {
       toast.success("Transferencia marcada como saldada");
       setConfirmOpen(false);
-      loadData();
+      // Refresh server component to reload all data
       router.refresh();
     }
 
     setSettling(false);
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
 
   if (!data) return null;
 

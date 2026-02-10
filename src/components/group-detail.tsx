@@ -5,6 +5,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ArrowLeft } from "lucide-react";
 import type { Group, Member } from "@/lib/types";
+import type { ExpenseWithSplits } from "@/lib/actions/expenses";
+import type { BalancesData } from "@/lib/actions/settlements";
 import { GroupExpensesTab } from "@/components/group-expenses-tab";
 import { GroupBalancesTab } from "@/components/group-balances-tab";
 import { GroupSettingsTab } from "@/components/group-settings-tab";
@@ -19,10 +21,14 @@ export function GroupDetail({
   group,
   members,
   currentMember,
+  initialExpenses,
+  initialBalances,
 }: {
   group: Group;
   members: Member[];
   currentMember: Member;
+  initialExpenses: ExpenseWithSplits[];
+  initialBalances: BalancesData | null;
 }) {
   const router = useRouter();
   const status = STATUS_CONFIG[group.status];
@@ -72,11 +78,16 @@ export function GroupDetail({
             group={group}
             members={members}
             currentMember={currentMember}
+            initialExpenses={initialExpenses}
           />
         </TabsContent>
 
         <TabsContent value="balances" className="mt-0 px-4 pb-12 pt-4">
-          <GroupBalancesTab group={group} members={members} />
+          <GroupBalancesTab
+            group={group}
+            members={members}
+            initialBalances={initialBalances}
+          />
         </TabsContent>
 
         <TabsContent value="settings" className="mt-0 px-4 pb-12 pt-4">

@@ -12,40 +12,15 @@ export async function getMyGroups(): Promise<GroupWithMemberCount[]> {
 
   if (!user) return [];
 
-  // Get groups where the user is a member
-  const { data: memberRows } = await supabase
-    .from("members")
-    .select("group_id")
-    .eq("user_id", user.id);
+  // Use RPC for optimized single-query fetch with member counts
+  const { data, error } = await supabase.rpc("get_my_groups");
 
-  if (!memberRows || memberRows.length === 0) return [];
+  if (error || !data) return [];
 
-  const groupIds = memberRows.map((m) => m.group_id);
-
-  const { data: groups, error } = await supabase
-    .from("groups")
-    .select("*")
-    .in("id", groupIds)
-    .order("created_at", { ascending: false });
-
-  if (error) throw new Error(error.message);
-  if (!groups) return [];
-
-  // Get member counts for each group
-  const { data: counts } = await supabase
-    .from("members")
-    .select("group_id")
-    .in("group_id", groupIds);
-
-  const countMap: Record<string, number> = {};
-  counts?.forEach((m) => {
-    countMap[m.group_id] = (countMap[m.group_id] || 0) + 1;
-  });
-
-  return groups.map((g) => ({
+  return data.map((g: any) => ({
     ...g,
-    member_count: countMap[g.id] || 0,
-  }));
+    member_count: Number(g.member_count),
+  })) as GroupWithMemberCount[];
 }
 
 export async function createGroup(formData: FormData): Promise<{ id: string } | { error: string }> {

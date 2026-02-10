@@ -1,17 +1,17 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Plus, Receipt, AlertTriangle } from "lucide-react";
-import { getGroupExpenses, type ExpenseWithSplits } from "@/lib/actions/expenses";
+import { type ExpenseWithSplits } from "@/lib/actions/expenses";
 import {
   formatCurrency,
   formatDate,
   getInitials,
   getAvatarColor,
 } from "@/lib/utils/format";
-import { toast } from "sonner";
 import { ExpenseFormSheet } from "@/components/expense-form-sheet";
 import { ExpenseDetailSheet } from "@/components/expense-detail-sheet";
 import type { Group, Member } from "@/lib/types";
@@ -20,13 +20,15 @@ export function GroupExpensesTab({
   group,
   members,
   currentMember,
+  initialExpenses,
 }: {
   group: Group;
   members: Member[];
   currentMember: Member;
+  initialExpenses: ExpenseWithSplits[];
 }) {
-  const [expenses, setExpenses] = useState<ExpenseWithSplits[]>([]);
-  const [loading, setLoading] = useState(true);
+  const router = useRouter();
+  const [expenses] = useState<ExpenseWithSplits[]>(initialExpenses);
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] =
@@ -36,21 +38,6 @@ export function GroupExpensesTab({
 
   const isArchived = group.status === "archived";
   const isSettling = group.status === "settling";
-
-  const loadExpenses = useCallback(async () => {
-    try {
-      const data = await getGroupExpenses(group.id);
-      setExpenses(data);
-    } catch {
-      toast.error("Error al cargar los gastos");
-    } finally {
-      setLoading(false);
-    }
-  }, [group.id]);
-
-  useEffect(() => {
-    loadExpenses();
-  }, [loadExpenses]);
 
   const handleExpenseClick = (expense: ExpenseWithSplits) => {
     setSelectedExpense(expense);
@@ -66,8 +53,8 @@ export function GroupExpensesTab({
     setFormOpen(open);
     if (!open) {
       setEditingExpense(null);
-      // Reload expenses after create/edit
-      loadExpenses();
+      // Refresh server component to reload all data
+      router.refresh();
     }
   };
 
@@ -75,18 +62,10 @@ export function GroupExpensesTab({
     setDetailOpen(open);
     if (!open) {
       setSelectedExpense(null);
-      // Reload in case of delete
-      loadExpenses();
+      // Refresh in case of delete
+      router.refresh();
     }
   };
-
-  if (loading) {
-    return (
-      <div className="flex justify-center py-12">
-        <div className="h-6 w-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-      </div>
-    );
-  }
 
   return (
     <>
