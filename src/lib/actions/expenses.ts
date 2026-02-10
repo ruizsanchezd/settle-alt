@@ -232,39 +232,34 @@ export async function createExpense(
     return { error: (e as Error).message };
   }
 
-  // Create expense
-  const { data: expense, error: expError } = await supabase
-    .from("expenses")
-    .insert({
-      group_id: data.groupId,
-      paid_by: data.paidBy,
-      description: description,
-      amount: data.amount,
-      split_type: data.splitType,
-      created_by: currentMember.id,
-    })
-    .select()
-    .single();
-
-  if (expError) return { error: expError.message };
-
-  // Create splits — cleanup expense if this fails
-  const { error: splitError } = await supabase.from("expense_splits").insert(
-    splits.map((s) => ({
-      expense_id: expense.id,
-      member_id: s.memberId,
-      amount: s.amount,
-    }))
+  // Create expense with splits atomically via RPC
+  const { data: expenseId, error: rpcError } = await supabase.rpc(
+    "create_expense_with_splits",
+    {
+      p_group_id: data.groupId,
+      p_paid_by: data.paidBy,
+      p_description: description,
+      p_amount: data.amount,
+      p_split_type: data.splitType,
+      p_created_by: currentMember.id,
+      p_splits: splits.map((s) => ({
+        memberId: s.memberId,
+        amount: s.amount,
+      })),
+    }
   );
 
-  if (splitError) {
-    // Cleanup: delete the expense we just created
-    await supabase.from("expenses").delete().eq("id", expense.id);
-    return { error: splitError.message };
-  }
+  if (rpcError) return { error: rpcError.message };
+
+  // Fetch the created expense for return
+  const { data: expense } = await supabase
+    .from("expenses")
+    .select("*")
+    .eq("id", expenseId)
+    .single();
 
   revalidatePath(`/groups/${data.groupId}`);
-  return { expense };
+  return { expense: expense || undefined };
 }
 
 export async function getGroupExpenses(
@@ -389,42 +384,30 @@ export async function updateExpense(
     return { error: (e as Error).message };
   }
 
-  // Update expense
-  const { data: expense, error: expError } = await supabase
+  // Update expense with splits atomically via RPC
+  const { error: rpcError } = await supabase.rpc("update_expense_with_splits", {
+    p_expense_id: expenseId,
+    p_paid_by: data.paidBy,
+    p_description: description,
+    p_amount: data.amount,
+    p_split_type: data.splitType,
+    p_splits: splits.map((s) => ({
+      memberId: s.memberId,
+      amount: s.amount,
+    })),
+  });
+
+  if (rpcError) return { error: rpcError.message };
+
+  // Fetch the updated expense for return
+  const { data: expense } = await supabase
     .from("expenses")
-    .update({
-      paid_by: data.paidBy,
-      description: description,
-      amount: data.amount,
-      split_type: data.splitType,
-      updated_at: new Date().toISOString(),
-    })
+    .select("*")
     .eq("id", expenseId)
-    .select()
     .single();
 
-  if (expError) return { error: expError.message };
-
-  // Delete old splits and insert new ones
-  const { error: delError } = await supabase
-    .from("expense_splits")
-    .delete()
-    .eq("expense_id", expenseId);
-
-  if (delError) return { error: delError.message };
-
-  const { error: splitError } = await supabase.from("expense_splits").insert(
-    splits.map((s) => ({
-      expense_id: expenseId,
-      member_id: s.memberId,
-      amount: s.amount,
-    }))
-  );
-
-  if (splitError) return { error: splitError.message };
-
   revalidatePath(`/groups/${data.groupId}`);
-  return { expense };
+  return { expense: expense || undefined };
 }
 
 export async function deleteExpense(

@@ -72,20 +72,6 @@ export async function createGroup(formData: FormData): Promise<{ id: string } | 
     return { error: "La descripción es demasiado larga" };
   }
 
-  // Create group
-  const { data: group, error: groupError } = await supabase
-    .from("groups")
-    .insert({
-      name: name,
-      description: description,
-      emoji: emoji || null,
-      created_by: user.id,
-    })
-    .select()
-    .single();
-
-  if (groupError) return { error: groupError.message };
-
   // Get user display name
   const { data: userData } = await supabase
     .from("users")
@@ -93,17 +79,25 @@ export async function createGroup(formData: FormData): Promise<{ id: string } | 
     .eq("id", user.id)
     .single();
 
-  // Add creator as first member
-  const { error: memberError } = await supabase.from("members").insert({
-    group_id: group.id,
-    user_id: user.id,
-    display_name: userData?.display_name || user.email?.split("@")[0] || "Usuario",
-  });
+  const displayName =
+    userData?.display_name || user.email?.split("@")[0] || "Usuario";
 
-  if (memberError) return { error: memberError.message };
+  // Create group with member atomically via RPC
+  const { data: groupId, error: rpcError } = await supabase.rpc(
+    "create_group_with_member",
+    {
+      p_name: name,
+      p_description: description,
+      p_emoji: emoji || null,
+      p_created_by: user.id,
+      p_display_name: displayName,
+    }
+  );
+
+  if (rpcError) return { error: rpcError.message };
 
   revalidatePath("/");
-  return { id: group.id };
+  return { id: groupId };
 }
 
 export async function getGroup(groupId: string): Promise<Group | null> {
