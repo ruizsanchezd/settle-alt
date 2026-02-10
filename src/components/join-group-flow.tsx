@@ -25,31 +25,25 @@ export function JoinGroupFlow({
   const [loading, setLoading] = useState(false);
 
   const handleJoin = async () => {
-    console.log("🔵 handleJoin called", { inviteCode, selectedId });
     setLoading(true);
 
     try {
       const result = await joinGroup(inviteCode, selectedId);
-      console.log("🟢 joinGroup result:", result);
 
       if (result.error) {
-        console.error("🔴 Error from joinGroup:", result.error);
         toast.error(result.error);
         setLoading(false);
         return;
       }
 
       if (result.groupId) {
-        console.log("🟢 Redirecting to group:", result.groupId);
         router.push(`/groups/${result.groupId}`);
       } else {
-        console.error("🟡 No groupId and no error returned");
         toast.error("Error desconocido al unirse al grupo");
         setLoading(false);
       }
     } catch (error) {
-      console.error("🔴 Exception in handleJoin:", error);
-      toast.error("Error inesperado: " + String(error));
+      toast.error("Error inesperado al unirse al grupo");
       setLoading(false);
     }
   };

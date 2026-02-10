@@ -56,19 +56,12 @@ export async function joinGroup(
   inviteCode: string,
   memberId: string | null
 ): Promise<{ groupId?: string; error?: string }> {
-  console.log("🔵 joinGroup server action called", { inviteCode, memberId });
-
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  console.log("🔵 User:", user?.id);
-
-  if (!user) {
-    console.error("🔴 No user authenticated");
-    return { error: "No autenticado" };
-  }
+  if (!user) return { error: "No autenticado" };
 
   // Find group by invite code
   const { data: group } = await supabase
@@ -107,18 +100,13 @@ export async function joinGroup(
 
   if (memberId) {
     // Link to existing placeholder member
-    const { data: placeholder, error: selectError } = await supabase
+    const { data: placeholder } = await supabase
       .from("members")
       .select("*")
       .eq("id", memberId)
       .eq("group_id", group.id)
       .is("user_id", null)
       .single();
-
-    if (selectError) {
-      console.error("Error al buscar placeholder:", selectError);
-      return { error: `Error al buscar miembro: ${selectError.message}` };
-    }
 
     if (!placeholder) {
       return { error: "Miembro no encontrado o ya vinculado" };
@@ -137,7 +125,6 @@ export async function joinGroup(
       .eq("id", memberId);
 
     if (updateError) {
-      console.error("Error al vincular miembro:", updateError);
       return { error: `Error al vincular: ${updateError.message}` };
     }
   } else {
