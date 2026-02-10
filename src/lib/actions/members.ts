@@ -100,7 +100,7 @@ export async function joinGroup(
 
   if (memberId) {
     // Link to existing placeholder member
-    const { data: placeholder } = await supabase
+    const { data: placeholder, error: selectError } = await supabase
       .from("members")
       .select("*")
       .eq("id", memberId)
@@ -108,16 +108,24 @@ export async function joinGroup(
       .is("user_id", null)
       .single();
 
+    if (selectError) {
+      console.error("Error al buscar placeholder:", selectError);
+      return { error: `Error al buscar miembro: ${selectError.message}` };
+    }
+
     if (!placeholder) {
       return { error: "Miembro no encontrado o ya vinculado" };
     }
 
-    const { error } = await supabase
+    const { error: updateError } = await supabase
       .from("members")
       .update({ user_id: user.id })
       .eq("id", memberId);
 
-    if (error) return { error: error.message };
+    if (updateError) {
+      console.error("Error al vincular miembro:", updateError);
+      return { error: `Error al vincular: ${updateError.message}` };
+    }
   } else {
     // Create new member
     const { error } = await supabase.from("members").insert({
