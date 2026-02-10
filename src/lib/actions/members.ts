@@ -129,7 +129,7 @@ export async function joinGroup(
     // 1. User is authenticated
     // 2. Placeholder exists and belongs to the correct group
     // 3. Placeholder is not already linked (user_id IS NULL)
-    const adminSupabase = await createAdminClient();
+    const adminSupabase = createAdminClient();
 
     const { error: updateError } = await adminSupabase
       .from("members")
