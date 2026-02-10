@@ -56,12 +56,19 @@ export async function joinGroup(
   inviteCode: string,
   memberId: string | null
 ): Promise<{ groupId?: string; error?: string }> {
+  console.log("🔵 joinGroup server action called", { inviteCode, memberId });
+
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) return { error: "No autenticado" };
+  console.log("🔵 User:", user?.id);
+
+  if (!user) {
+    console.error("🔴 No user authenticated");
+    return { error: "No autenticado" };
+  }
 
   // Find group by invite code
   const { data: group } = await supabase
