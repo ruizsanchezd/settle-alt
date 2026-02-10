@@ -177,6 +177,7 @@ export function GroupSettingsTab({
               disabled={!newName.trim() || addingMember}
               size="icon"
               className="h-11 w-11 shrink-0 rounded-xl"
+              aria-label="Añadir miembro"
             >
               <UserPlus className="h-4 w-4" />
             </Button>

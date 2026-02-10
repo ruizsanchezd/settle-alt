@@ -36,6 +36,7 @@ export function GroupDetail({
           <button
             onClick={() => router.push("/")}
             className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition-colors hover:bg-muted active:bg-muted"
+            aria-label="Volver"
           >
             <ArrowLeft className="h-5 w-5" />
           </button>

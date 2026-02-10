@@ -123,7 +123,7 @@ export async function joinGroup(
   }
 
   // Use admin client for member queries (user may not be a member yet)
-  const adminSupabase = createAdminClient();
+  const adminSupabase = await createAdminClient();
 
   // Check if user is already a member
   const { data: existingMember } = await adminSupabase
