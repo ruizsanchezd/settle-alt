@@ -124,7 +124,15 @@ export async function joinGroup(
       return { error: "Miembro no encontrado o ya vinculado" };
     }
 
-    const { error: updateError } = await supabase
+    // Use admin client to bypass RLS for this specific operation
+    // This is safe because we've already validated:
+    // 1. User is authenticated
+    // 2. Placeholder exists and belongs to the correct group
+    // 3. Placeholder is not already linked (user_id IS NULL)
+    const { createAdminClient } = await import("@/lib/supabase/server");
+    const adminSupabase = await createAdminClient();
+
+    const { error: updateError } = await adminSupabase
       .from("members")
       .update({ user_id: user.id })
       .eq("id", memberId);
