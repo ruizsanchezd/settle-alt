@@ -15,7 +15,7 @@ export function GroupCard({ group }: { group: GroupWithMemberCount }) {
 
   return (
     <Link href={`/groups/${group.id}`}>
-      <Card className="flex flex-row items-center gap-4 rounded-2xl border p-4 py-4 transition-colors hover:bg-muted/50 active:bg-neutral-50">
+      <Card className="flex flex-row items-center gap-4 rounded-2xl border p-4 py-4 shadow-xs transition-colors hover:bg-muted/50 active:bg-neutral-50">
         <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-muted text-xl">
           {group.emoji || <Layers className="h-5 w-5 text-muted-foreground" />}
         </div>

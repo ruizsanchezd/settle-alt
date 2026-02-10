@@ -42,7 +42,7 @@ export default async function HomePage() {
       ) : (
         <>
           {activeGroups.length > 0 && (
-            <div className="mt-6 flex flex-col gap-4">
+            <div className="mt-6 flex flex-col gap-3">
               {activeGroups.map((group) => (
                 <GroupCard key={group.id} group={group} />
               ))}
@@ -54,7 +54,7 @@ export default async function HomePage() {
               <h3 className="mb-3 text-sm font-medium text-muted-foreground">
                 Archivados
               </h3>
-              <div className="flex flex-col gap-4">
+              <div className="flex flex-col gap-3">
                 {archivedGroups.map((group) => (
                   <GroupCard key={group.id} group={group} />
                 ))}
