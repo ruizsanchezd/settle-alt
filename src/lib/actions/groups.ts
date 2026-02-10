@@ -10,7 +10,7 @@ export async function getMyGroups(): Promise<GroupWithMemberCount[]> {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) throw new Error("No autenticado");
+  if (!user) return [];
 
   // Get groups where the user is a member
   const { data: memberRows } = await supabase
@@ -56,24 +56,28 @@ export async function createGroup(formData: FormData): Promise<{ id: string } | 
 
   if (!user) return { error: "No autenticado" };
 
-  const name = formData.get("name") as string;
-  const description = (formData.get("description") as string) || null;
+  const name = (formData.get("name") as string)?.trim();
+  const description = (formData.get("description") as string)?.trim() || null;
   const emoji = (formData.get("emoji") as string) || null;
 
-  if (!name || name.trim().length === 0) {
+  if (!name || name.length === 0) {
     return { error: "El nombre del grupo es obligatorio" };
   }
 
-  if (name.trim().length > 100) {
+  if (name.length > 100) {
     return { error: "El nombre no puede superar los 100 caracteres" };
+  }
+
+  if (description && description.length > 500) {
+    return { error: "La descripción es demasiado larga" };
   }
 
   // Create group
   const { data: group, error: groupError } = await supabase
     .from("groups")
     .insert({
-      name: name.trim(),
-      description: description?.trim() || null,
+      name: name,
+      description: description,
       emoji: emoji || null,
       created_by: user.id,
     })

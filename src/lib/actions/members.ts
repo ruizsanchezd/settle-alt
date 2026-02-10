@@ -40,12 +40,13 @@ export async function addPlaceholderMember(
 
   if (!user) return { error: "No autenticado" };
 
-  if (!displayName || displayName.trim().length === 0) {
+  const name = displayName?.trim();
+  if (!name || name.length === 0) {
     return { error: "El nombre es obligatorio" };
   }
 
-  if (displayName.trim().length > 50) {
-    return { error: "El nombre no puede superar los 50 caracteres" };
+  if (name.length > 100) {
+    return { error: "El nombre es demasiado largo" };
   }
 
   const { data, error } = await supabase
@@ -53,7 +54,7 @@ export async function addPlaceholderMember(
     .insert({
       group_id: groupId,
       user_id: null,
-      display_name: displayName.trim(),
+      display_name: name,
     })
     .select()
     .single();

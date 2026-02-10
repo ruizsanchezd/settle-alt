@@ -144,10 +144,53 @@ export async function createExpense(
 
   if (!user) return { error: "No autenticado" };
 
-  // Validate inputs
-  if (!data.description.trim()) return { error: "La descripción es obligatoria" };
-  if (data.amount <= 0) return { error: "El importe debe ser mayor a 0" };
-  if (data.participants.length === 0) return { error: "Debe haber al menos un participante" };
+  // Validate description
+  const description = data.description?.trim();
+  if (!description || description.length === 0) {
+    return { error: "La descripción es obligatoria" };
+  }
+  if (description.length > 200) {
+    return { error: "La descripción no puede superar 200 caracteres" };
+  }
+
+  // Validate amount
+  if (!Number.isFinite(data.amount) || data.amount <= 0) {
+    return { error: "El importe debe ser un número positivo" };
+  }
+  if (data.amount > 999999.99) {
+    return { error: "El importe es demasiado alto" };
+  }
+
+  // Validate participants
+  if (!Array.isArray(data.participants) || data.participants.length === 0) {
+    return { error: "Debe haber al menos un participante" };
+  }
+
+  // Validate split values if provided
+  if (data.splitValues) {
+    for (const [memberId, value] of Object.entries(data.splitValues)) {
+      if (!Number.isFinite(value) || value < 0) {
+        return { error: "Valor de split no válido" };
+      }
+    }
+  }
+
+  // Check for duplicate expense in last 5 seconds
+  const { data: recentDuplicate } = await supabase
+    .from("expenses")
+    .select("id")
+    .eq("group_id", data.groupId)
+    .eq("amount", data.amount)
+    .eq("description", description)
+    .gte("created_at", new Date(Date.now() - 5000).toISOString())
+    .maybeSingle();
+
+  if (recentDuplicate) {
+    return {
+      error:
+        "Este gasto parece duplicado. Espera unos segundos e inténtalo de nuevo.",
+    };
+  }
 
   // Get current user's member record
   const { data: currentMember } = await supabase
@@ -195,7 +238,7 @@ export async function createExpense(
     .insert({
       group_id: data.groupId,
       paid_by: data.paidBy,
-      description: data.description.trim(),
+      description: description,
       amount: data.amount,
       split_type: data.splitType,
       created_by: currentMember.id,
@@ -285,9 +328,36 @@ export async function updateExpense(
 
   if (!user) return { error: "No autenticado" };
 
-  if (!data.description.trim()) return { error: "La descripción es obligatoria" };
-  if (data.amount <= 0) return { error: "El importe debe ser mayor a 0" };
-  if (data.participants.length === 0) return { error: "Debe haber al menos un participante" };
+  // Validate description
+  const description = data.description?.trim();
+  if (!description || description.length === 0) {
+    return { error: "La descripción es obligatoria" };
+  }
+  if (description.length > 200) {
+    return { error: "La descripción no puede superar 200 caracteres" };
+  }
+
+  // Validate amount
+  if (!Number.isFinite(data.amount) || data.amount <= 0) {
+    return { error: "El importe debe ser un número positivo" };
+  }
+  if (data.amount > 999999.99) {
+    return { error: "El importe es demasiado alto" };
+  }
+
+  // Validate participants
+  if (!Array.isArray(data.participants) || data.participants.length === 0) {
+    return { error: "Debe haber al menos un participante" };
+  }
+
+  // Validate split values if provided
+  if (data.splitValues) {
+    for (const [memberId, value] of Object.entries(data.splitValues)) {
+      if (!Number.isFinite(value) || value < 0) {
+        return { error: "Valor de split no válido" };
+      }
+    }
+  }
 
   // Validate paidBy and participants are members of this group
   const { data: groupMembers } = await supabase
@@ -324,7 +394,7 @@ export async function updateExpense(
     .from("expenses")
     .update({
       paid_by: data.paidBy,
-      description: data.description.trim(),
+      description: description,
       amount: data.amount,
       split_type: data.splitType,
       updated_at: new Date().toISOString(),

@@ -200,6 +200,22 @@ export async function markTransferAsSettled(
 
   if (!user) return { success: false, error: "No autenticado" };
 
+  // Validate amount
+  if (!Number.isFinite(amount) || amount <= 0) {
+    return { success: false, error: "El importe debe ser un número positivo" };
+  }
+  if (amount > 999999.99) {
+    return { success: false, error: "El importe es demasiado alto" };
+  }
+
+  // Validate different members
+  if (fromMemberId === toMemberId) {
+    return {
+      success: false,
+      error: "El pagador y el receptor deben ser diferentes",
+    };
+  }
+
   // Check group status — transition to settling if active
   const { data: group } = await supabase
     .from("groups")
