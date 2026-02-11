@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -28,13 +28,18 @@ export function GroupExpensesTab({
   initialExpenses: ExpenseWithSplits[];
 }) {
   const router = useRouter();
-  const [expenses] = useState<ExpenseWithSplits[]>(initialExpenses);
+  const [expenses, setExpenses] = useState<ExpenseWithSplits[]>(initialExpenses);
   const [formOpen, setFormOpen] = useState(false);
   const [detailOpen, setDetailOpen] = useState(false);
   const [selectedExpense, setSelectedExpense] =
     useState<ExpenseWithSplits | null>(null);
   const [editingExpense, setEditingExpense] =
     useState<ExpenseWithSplits | null>(null);
+
+  // Sync local state with server data after refresh
+  useEffect(() => {
+    setExpenses(initialExpenses);
+  }, [initialExpenses]);
 
   const isArchived = group.status === "archived";
   const isSettling = group.status === "settling";

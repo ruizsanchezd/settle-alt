@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -44,11 +44,16 @@ export function GroupBalancesTab({
   initialBalances: BalancesData | null;
 }) {
   const router = useRouter();
-  const [data] = useState<BalancesData | null>(initialBalances);
+  const [data, setData] = useState<BalancesData | null>(initialBalances);
   const [settlingTransfer, setSettlingTransfer] =
     useState<SuggestedTransfer | null>(null);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [settling, setSettling] = useState(false);
+
+  // Sync local state with server data after refresh
+  useEffect(() => {
+    setData(initialBalances);
+  }, [initialBalances]);
 
   const isArchived = group.status === "archived";
   const isSettling = group.status === "settling";
